@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Chess Game</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+        #board {
+            width: 400px;
+            height: 400px;
+        }
+        #status {
+            margin-top: 1rem;
+            text-align: center;
+        }
+        button {
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>Advanced Chess Game</h1>
+    <div id="board"></div>
+    <div id="status"></div>
+    <button id="resetBtn">Reset Game</button>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
+    <script>
+        const board = Chessboard('board', {
+            draggable: true,
+            dropOffBoard: 'snapback',
+            sparePieces: false
+        });
+
+        let game = new Chess();
+        let $status = $('#status');
+        let selectedSquare = null;
+
+        function onDragStart(source, piece, position, orientation) {
+            if (game.game_over()) return false;
+            if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
+                (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
+                return false;
+            }
+        }
+
+        function makeMove(move) {
+            let result = game.move(move);
+            if (result === null) return 'snapback';
+            updateStatus();
+            highlightValidMoves();
+        }
+
+        function onDrop(source, target) {
+            let move = makeMove({
+                from: source,
+                to: target,
+                promotion: 'q'
+            });
+            if (move === 'snapback') return 'snapback';
+            selectedSquare = null;
+        }
+
+        function onSnapEnd() {
+            board.position(game.fen());
+        }
+
+        function updateStatus() {
+            let status = '';
+            let moveColor = game.turn() === 'b' ? 'Black' : 'White';
+
+            if (game.in_checkmate()) {
+                status = 'Game over, ' + moveColor + ' is in checkmate.';
+            } else if (game.in_draw()) {
+                status = 'Game over, drawn position';
+            } else {
+                status = moveColor + ' to move';
+                if (game.in_check()) {
+                    status += ', ' + moveColor + ' is in check';
+                }
+            }
+
+            $status.html(status);
+        }
+
+        function highlightValidMoves(square = null) {
+            $('.square-55d63').removeClass('highlight-square');
+            if (square) {
+                $('.square-' + square).addClass('highlight-square');
+                let moves = game.moves({square: square, verbose: true});
+                moves.forEach(function(move) {
+                    $('.square-' + move.to).addClass('highlight-square');
+                });
+            }
+        }
+
+        function onSquareClick(square) {
+            if (selectedSquare === null) {
+                selectedSquare = square;
+                highlightValidMoves(square);
+            } else {
+                makeMove({
+                    from: selectedSquare,
+                    to: square,
+                    promotion: 'q'
+                });
+                selectedSquare = null;
+                highlightValidMoves();
+            }
+        }
+
+        $('#resetBtn').on('click', function() {
+            game.reset();
+            board.position('start');
+            updateStatus();
+            highlightValidMoves();
+            selectedSquare = null;
+        });
+
+        board.position('start');
+        updateStatus();
+
+        $('#board').on('click', '.square-55d63', function() {
+            let square = $(this).attr('data-square');
+            onSquareClick(square);
+        });
+
+        let config = {
+            draggable: true,
+            position: 'start',
+            onDragStart: onDragStart,
+            onDrop: onDrop,
+            onSnapEnd: onSnapEnd
+        };
+        board = Chessboard('board', config);
+    </script>
+</body>
+</html>
+
