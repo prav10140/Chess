@@ -4,6 +4,7 @@ import json
 def chess_game(request):
     board = chess.Board()
 
+    # Get the move from the request
     move = request.args.get('move', '')
 
     if move:
@@ -16,6 +17,7 @@ def chess_game(request):
         except Exception as e:
             return json.dumps({"error": "Invalid move format"})
 
+    # Check game state
     game_status = ""
     if board.is_checkmate():
         game_status = "Checkmate"
