@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Chess Game</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+    <style>
+        #board {
+            width: 400px;
+            margin: auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="board"></div>
+    <button id="resetBtn">Reset Game</button>
+
+    <script>
+        var board = null;
+        var game = new Chess();
+
+        function onDragStart(source, piece, position, orientation) {
+            if (game.game_over()) return false;
+            if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
+                (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
+                return false;
+            }
+        }
+
+        function onDrop(source, target) {
+            var move = game.move({
+                from: source,
+                to: target,
+                promotion: 'q'
+            });
+
+            if (move === null) return 'snapback';
+
+            $.ajax({
+                url: '/api/move',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ move: move.san }),
+                success: function(data) {
+                    game.load(data.fen);
+                    board.position(data.fen);
+                    if (data.game_over) {
+                        alert('Game Over');
+                    }
+                }
+            });
+        }
+
+        function onSnapEnd() {
+            board.position(game.fen());
+        }
+
+        var config = {
+            draggable: true,
+            position: 'start',
+            onDragStart: onDragStart,
+            onDrop: onDrop,
+            onSnapEnd: onSnapEnd
+        };
+        board = Chessboard('board', config);
+
+        $('#resetBtn').on('click', function() {
+            $.ajax({
+                url: '/api/reset',
+                type: 'POST',
+                success: function(data) {
+                    game = new Chess();
+                    board.position(data.fen);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
