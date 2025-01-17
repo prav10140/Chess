@@ -1,10 +1,15 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 import chess
+import os
 
 app = Flask(__name__)
 
 # Global variable to store the game state
 board = chess.Board()
+
+@app.route('/')
+def serve_index():
+    return send_from_directory('.', 'index.html')
 
 @app.route('/api/move', methods=['POST'])
 def make_move():
@@ -17,8 +22,7 @@ def make_move():
                 'fen': board.fen(),
                 'game_over': board.is_game_over(),
                 'in_check': board.is_check(),
-                'turn': 'white' if board.turn == chess.WHITE else 'black',
-                'valid_moves': [move.uci() for move in board.legal_moves]
+                'turn': 'white' if board.turn == chess.WHITE else 'black'
             })
         else:
             return jsonify({'error': 'Invalid move'}), 400
@@ -30,18 +34,8 @@ def reset_game():
     global board
     board = chess.Board()
     return jsonify({
-        'fen': board.fen(),
-        'valid_moves': [move.uci() for move in board.legal_moves]
+        'fen': board.fen()
     })
-
-@app.route('/api/valid_moves', methods=['GET'])
-def get_valid_moves():
-    square = request.args.get('square')
-    if square:
-        valid_moves = [move.uci() for move in board.legal_moves if move.from_square == chess.parse_square(square)]
-    else:
-        valid_moves = [move.uci() for move in board.legal_moves]
-    return jsonify({'valid_moves': valid_moves})
 
 if __name__ == '__main__':
     app.run(debug=True)
