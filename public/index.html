@@ -3,37 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Chess Game</title>
-    <script src="https://unpkg.com/chessboardjs/dist/chessboard-1.0.0.min.js"></script>
+    <title>Python Chess Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        #board {
+            margin: 20px auto;
+            display: grid;
+            grid-template-columns: repeat(8, 50px);
+            grid-template-rows: repeat(8, 50px);
+            gap: 2px;
+        }
+        .square {
+            width: 50px;
+            height: 50px;
+        }
+        .light {
+            background-color: #f0d9b5;
+        }
+        .dark {
+            background-color: #b58863;
+        }
+        .piece {
+            font-size: 24px;
+            text-align: center;
+            line-height: 50px;
+        }
+    </style>
 </head>
 <body>
     <h1>Python Chess Game</h1>
-    <div id="board1" style="width: 400px"></div>
-    <div id="game-status"></div>
+    <div id="board"></div>
 
     <script>
-        var board = Chessboard('#board1', {
-            draggable: true,
-            dropOffBoard: 'trash',
-            sparePieces: true
-        });
+        const boardElement = document.getElementById("board");
 
-        board.start();
+        // Fetch the board and game state from the backend
+        async function fetchBoard() {
+            const response = await fetch("/api/game");
+            const data = await response.json();
+            renderBoard(data.board);
+        }
 
-        // Send the move to the backend when a piece is dropped
-        board.on('drop', function (source, target) {
-            fetch(`/api/game?move=${source}${target}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.board) {
-                        // Update the board after the move
-                        board.position(data.board);
-                        document.getElementById("game-status").innerHTML = `Game Status: ${data.status}`;
-                    } else {
-                        alert("Invalid move");
-                    }
-                });
-        });
+        // Render the chess board from the FEN string
+        function renderBoard(fen) {
+            const boardArray = fen.split(" ")[0].split("/"); // Get the first part of FEN (board state)
+            boardElement.innerHTML = "";
+
+            for (let i = 0; i < 8; i++) {
+                const row = boardArray[i];
+                for (let j = 0; j < row.length; j++) {
+                    const square = document.createElement("div");
+                    const isLightSquare = (i + j) % 2 === 0;
+                    square.className = `square ${isLightSquare ? "light" : "dark"}`;
+                    square.innerHTML = row[j] !== "1" ? row[j] : "";
+                    boardElement.appendChild(square);
+                }
+            }
+        }
+
+        fetchBoard(); // Fetch and render the initial board
     </script>
 </body>
 </html>
