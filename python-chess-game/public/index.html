@@ -1,1 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Chess Game</title>
+    <script src="https://unpkg.com/chessboardjs/dist/chessboard-1.0.0.min.js"></script>
+</head>
+<body>
+    <h1>Python Chess Game</h1>
+    <div id="board1" style="width: 400px"></div>
+    <div id="game-status"></div>
+
+    <script>
+        var board = Chessboard('#board1', {
+            draggable: true,
+            dropOffBoard: 'trash',
+            sparePieces: true
+        });
+
+        board.start();
+
+        // Send the move to the backend when a piece is dropped
+        board.on('drop', function (source, target) {
+            fetch(`/api/game?move=${source}${target}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.board) {
+                        // Update the board after the move
+                        board.position(data.board);
+                        document.getElementById("game-status").innerHTML = `Game Status: ${data.status}`;
+                    } else {
+                        alert("Invalid move");
+                    }
+                });
+        });
+    </script>
+</body>
+</html>
 
