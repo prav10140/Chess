@@ -10,7 +10,10 @@
     {
       "src": "/api/game",
       "dest": "/game.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/public/index.html"
     }
   ]
 }
-
