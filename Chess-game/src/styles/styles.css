@@ -1,1 +1,23 @@
+.chessboard {
+    display: grid;
+    grid-template-columns: repeat(8, 50px);
+    grid-template-rows: repeat(8, 50px);
+}
+
+.square {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    background-color: #f0d9b5;
+    border: 1px solid #ccc;
+}
+
+.square:nth-child(even) {
+    background-color: #b58863;
+}
+
+.valid-move {
+    background-color: #00ff00 !important;
+}
 
