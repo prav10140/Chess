@@ -1,32 +1,31 @@
+from flask import Flask, request, jsonify
 import chess
-import json
 
-def chess_game(request):
-    # Initialize a new chess game
+app = Flask(__name__)
+
+# Global variable to store the game state
+board = chess.Board()
+
+@app.route('/api/move', methods=['POST'])
+def make_move():
+    move = request.json['move']
+    try:
+        board.push_san(move)
+        return jsonify({
+            'fen': board.fen(),
+            'game_over': board.is_game_over(),
+            'in_check': board.is_check(),
+            'turn': 'white' if board.turn == chess.WHITE else 'black'
+        })
+    except ValueError:
+        return jsonify({'error': 'Invalid move'}), 400
+
+@app.route('/api/reset', methods=['POST'])
+def reset_game():
+    global board
     board = chess.Board()
+    return jsonify({'fen': board.fen()})
 
-    # Get move from the request (if any)
-    move = request.args.get('move', '')
+if __name__ == '__main__':
+    app.run(debug=True)
 
-    if move:
-        try:
-            # Try to make the move
-            move_obj = chess.Move.from_uci(move)
-            if move_obj in board.legal_moves:
-                board.push(move_obj)
-            else:
-                return json.dumps({"error": "Illegal move"})
-        except Exception as e:
-            return json.dumps({"error": "Invalid move format"})
-
-    # Check for game status
-    game_status = ""
-    if board.is_checkmate():
-        game_status = "Checkmate"
-    elif board.is_stalemate():
-        game_status = "Stalemate"
-    elif board.is_check():
-        game_status = "Check"
-
-    # Return the board's FEN string and game status
-    return json.dumps({"board": board.fen(), "status": game_status})
