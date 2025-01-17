@@ -4,6 +4,10 @@
     {
       "src": "game.py",
       "use": "@vercel/python"
+    },
+    {
+      "src": "public/index.html",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
