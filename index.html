@@ -9,88 +9,201 @@
     <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
     <style>
-        body {
+        :root {
+            --board-brown: #b58863;
+            --board-white: #f0d9b5;
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --text-color: #2c3e50;
+            --background-color: #ecf0f1;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            overflow-x: hidden;
+            background-color: var(--background-color);
+            color: var(--text-color);
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .game-container {
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            background-color: #ffffff;
+            padding: 20px;
+            max-width: 100%;
+            overflow-x: hidden;
         }
 
         h1 {
             font-size: 2.5rem;
             font-weight: bold;
             margin-bottom: 2rem;
-            color: #000000;
+            color: var(--primary-color);
+            text-align: center;
+        }
+
+        .board-container {
+            width: min(80vw, 560px);
+            aspect-ratio: 1;
+            margin: 0 auto;
+            position: relative;
         }
 
         #board {
-            width: 480px;
-            height: 480px;
-            margin-bottom: 1.5rem;
+            width: 100% !important;
+            height: 100% !important;
+            position: relative;
         }
 
         .status-container {
-            text-align: center;
-            margin-bottom: 1rem;
-            font-size: 1.1rem;
+            width: 100%;
+            max-width: 560px;
+            margin: 2rem auto;
+            padding: 1rem;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         .status-item {
             margin: 0.5rem 0;
-            color: #333;
+            padding: 0.5rem;
+            text-align: center;
+            font-size: 1.1rem;
+            border-bottom: 1px solid #eee;
         }
 
-        .reset-button {
-            background-color: #4285f4;
+        .status-item:last-child {
+            border-bottom: none;
+        }
+
+        .button-container {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background-color: var(--accent-color);
             color: white;
             border: none;
-            padding: 10px 24px;
-            border-radius: 4px;
+            padding: 12px 24px;
+            border-radius: 8px;
             font-size: 1rem;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: transform 0.2s, background-color 0.2s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        .reset-button:hover {
-            background-color: #3367d6;
+        button:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
         }
 
-        /* Chess board colors matching the image */
+        button:active {
+            transform: translateY(0);
+        }
+
+        /* Custom chess piece styles */
+        .piece-417db {
+            font-size: 40px !important;
+            line-height: 40px !important;
+            height: 40px !important;
+            width: 40px !important;
+        }
+
+        /* Board colors */
         .white-1e1d7 {
-            background-color: #f0d9b5;
+            background-color: var(--board-white);
         }
 
         .black-3c85d {
-            background-color: #b58863;
+            background-color: var(--board-brown);
         }
 
-        @media (max-width: 500px) {
-            #board {
-                width: 320px;
-                height: 320px;
+        /* Highlight styles */
+        .highlight-square {
+            box-shadow: inset 0 0 3px 3px rgba(255, 255, 0, 0.5);
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .game-container {
+                padding: 10px;
             }
 
             h1 {
-                font-size: 2rem;
+                font-size: 1.8rem;
+                margin-bottom: 1.5rem;
             }
+
+            .board-container {
+                width: 95vw;
+            }
+
+            .status-container {
+                width: 95%;
+                margin: 1rem auto;
+            }
+
+            .status-item {
+                font-size: 1rem;
+            }
+
+            button {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+                width: 100%;
+            }
+
+            .piece-417db {
+                font-size: 30px !important;
+                line-height: 30px !important;
+                height: 30px !important;
+                width: 30px !important;
+            }
+        }
+
+        /* Prevent scrolling when touching the board on mobile */
+        .board-container {
+            touch-action: none;
         }
     </style>
 </head>
 <body>
-    <h1>Advanced Chess Game</h1>
-    <div id="board"></div>
-    <div class="status-container">
-        <div class="status-item">Turn: <span id="turn">White</span></div>
-        <div class="status-item">In Check: <span id="check">No</span></div>
-        <div class="status-item">Game Over: <span id="gameOver">No</span></div>
+    <div class="game-container">
+        <h1>Advanced Chess Game</h1>
+        <div class="board-container">
+            <div id="board"></div>
+        </div>
+        <div class="status-container">
+            <div class="status-item">Turn: <span id="turn">White</span></div>
+            <div class="status-item">In Check: <span id="check">No</span></div>
+            <div class="status-item">Game Over: <span id="gameOver">No</span></div>
+            <div class="button-container">
+                <button id="resetBtn">Reset Game</button>
+                <button id="undoBtn">Undo Move</button>
+                <button id="flipBtn">Flip Board</button>
+            </div>
+        </div>
     </div>
-    <button class="reset-button" id="resetBtn">Reset Game</button>
 
     <script>
+        const PIECES = {
+            'wK': '♔', 'wQ': '♕', 'wR': '♖', 'wB': '♗', 'wN': '♘', 'wP': '♙',
+            'bK': '♚', 'bQ': '♛', 'bR': '♜', 'bB': '♝', 'bN': '♞', 'bP': '♟'
+        };
+
         var board = null;
         var game = new Chess();
 
@@ -123,25 +236,52 @@
             board.position(game.fen());
         }
 
+        // Custom piece theme using Unicode characters
+        function customPieceTheme(piece) {
+            return PIECES[piece];
+        }
+
         var config = {
             draggable: true,
             position: 'start',
             onDragStart: onDragStart,
             onDrop: onDrop,
             onSnapEnd: onSnapEnd,
-            pieceTheme: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-7dGeLYEdEKAkO7Istq9S5vxQYd1Wcs.png#{piece}'
+            pieceTheme: customPieceTheme,
+            showNotation: true
         };
+
         board = Chessboard('board', config);
 
+        // Prevent scrolling when touching the board on mobile
+        document.querySelector('.board-container').addEventListener('touchmove', function(e) {
+            e.preventDefault();
+        }, { passive: false });
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            board.resize();
+        });
+
+        // Button event listeners
         document.getElementById('resetBtn').addEventListener('click', function() {
             game.reset();
             board.position('start');
             updateStatus();
         });
 
+        document.getElementById('undoBtn').addEventListener('click', function() {
+            game.undo();
+            board.position(game.fen());
+            updateStatus();
+        });
+
+        document.getElementById('flipBtn').addEventListener('click', function() {
+            board.flip();
+        });
+
         updateStatus();
     </script>
 </body>
 </html>
-
 
