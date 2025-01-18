@@ -332,9 +332,11 @@
             })
             .then(response => response.json())
             .then(data => {
+                console.log('Computer move response:', data);
                 if (data.move) {
                     const move = game.move(data.move);
                     if (move) {
+                        console.log('Computer move applied:', move);
                         animateMove(move.from, move.to);
                         updateBoard();
                         if (game.game_over()) {
