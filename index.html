@@ -112,6 +112,17 @@
             transform: translateY(0);
         }
 
+        .toggle-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .toggle-container label {
+            margin-right: 10px;
+        }
+
         @keyframes win-animation {
             0% { transform: scale(1); }
             50% { transform: scale(1.1); }
@@ -144,6 +155,10 @@
 <body>
     <div class="game-container">
         <h1>Advanced Chess Game</h1>
+        <div class="toggle-container">
+            <label for="playComputer">Play against computer:</label>
+            <input type="checkbox" id="playComputer">
+        </div>
         <div id="board"></div>
         <div class="status" id="status"></div>
         <button id="resetBtn">Reset Game</button>
@@ -158,6 +173,7 @@
         let board;
         let game = new Chess();
         let selectedSquare = null;
+        let playingComputer = false;
 
         function createBoard() {
             const boardElement = document.getElementById('board');
@@ -193,6 +209,8 @@
         }
 
         function onSquareClick(event) {
+            if (playingComputer && game.turn() === 'b') return; // Prevent moves when it's computer's turn
+
             const square = event.target.dataset.square;
             if (selectedSquare === null) {
                 selectedSquare = square;
@@ -217,6 +235,8 @@
                     updateBoard();
                     if (game.game_over()) {
                         animateWin();
+                    } else if (playingComputer && game.turn() === 'b') {
+                        setTimeout(makeComputerMove, 500);
                     }
                 }
             }
@@ -299,7 +319,38 @@
             }, 1500);
         }
 
+        function makeComputerMove() {
+            fetch('/api/computer_move', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ fen: game.fen() }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.move) {
+                    const move = game.move(data.move);
+                    if (move) {
+                        animateMove(move.from, move.to);
+                        updateBoard();
+                        if (game.game_over()) {
+                            animateWin();
+                        }
+                    }
+                }
+            });
+        }
+
         document.getElementById('resetBtn').addEventListener('click', () => {
+            game.reset();
+            selectedSquare = null;
+            removeHighlights();
+            updateBoard();
+        });
+
+        document.getElementById('playComputer').addEventListener('change', (event) => {
+            playingComputer = event.target.checked;
             game.reset();
             selectedSquare = null;
             removeHighlights();
