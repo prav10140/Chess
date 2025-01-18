@@ -6,8 +6,6 @@
     <title>Advanced Chess Game</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
     <style>
         :root {
             --board-brown: #b58863;
@@ -26,262 +24,195 @@
 
         html, body {
             height: 100%;
-            overflow-x: hidden;
+            font-family: Arial, sans-serif;
             background-color: var(--background-color);
             color: var(--text-color);
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
 
         .game-container {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            max-width: 600px;
+            margin: 0 auto;
             padding: 20px;
-            max-width: 100%;
-            overflow-x: hidden;
         }
 
         h1 {
-            font-size: 2.5rem;
-            font-weight: bold;
-            margin-bottom: 2rem;
-            color: var(--primary-color);
             text-align: center;
-        }
-
-        .board-container {
-            width: min(80vw, 560px);
-            aspect-ratio: 1;
-            margin: 0 auto;
-            position: relative;
+            margin-bottom: 20px;
+            color: var(--primary-color);
         }
 
         #board {
-            width: 100% !important;
-            height: 100% !important;
-            position: relative;
-        }
-
-        .status-container {
             width: 100%;
-            max-width: 560px;
-            margin: 2rem auto;
-            padding: 1rem;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            aspect-ratio: 1 / 1;
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            border: 2px solid var(--primary-color);
         }
 
-        .status-item {
-            margin: 0.5rem 0;
-            padding: 0.5rem;
-            text-align: center;
-            font-size: 1.1rem;
-            border-bottom: 1px solid #eee;
-        }
-
-        .status-item:last-child {
-            border-bottom: none;
-        }
-
-        .button-container {
+        .square {
             display: flex;
-            gap: 1rem;
             justify-content: center;
-            margin-top: 1rem;
-            flex-wrap: wrap;
+            align-items: center;
+            font-size: 40px;
+            cursor: pointer;
+        }
+
+        .white {
+            background-color: var(--board-white);
+        }
+
+        .black {
+            background-color: var(--board-brown);
+        }
+
+        .highlight {
+            box-shadow: inset 0 0 0 4px yellow;
+        }
+
+        .status {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 18px;
         }
 
         button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            font-size: 16px;
             background-color: var(--accent-color);
             color: white;
             border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 1rem;
+            border-radius: 5px;
             cursor: pointer;
-            transition: transform 0.2s, background-color 0.2s;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         button:hover {
             background-color: #2980b9;
-            transform: translateY(-2px);
         }
 
-        button:active {
-            transform: translateY(0);
-        }
-
-        /* Custom chess piece styles */
-        .piece-417db {
-            font-size: 40px !important;
-            line-height: 40px !important;
-            height: 40px !important;
-            width: 40px !important;
-        }
-
-        /* Board colors */
-        .white-1e1d7 {
-            background-color: var(--board-white);
-        }
-
-        .black-3c85d {
-            background-color: var(--board-brown);
-        }
-
-        /* Highlight styles */
-        .highlight-square {
-            box-shadow: inset 0 0 3px 3px rgba(255, 255, 0, 0.5);
-        }
-
-        /* Mobile optimizations */
-        @media (max-width: 768px) {
+        @media (max-width: 600px) {
             .game-container {
                 padding: 10px;
             }
 
-            h1 {
-                font-size: 1.8rem;
-                margin-bottom: 1.5rem;
+            .square {
+                font-size: 30px;
             }
-
-            .board-container {
-                width: 95vw;
-            }
-
-            .status-container {
-                width: 95%;
-                margin: 1rem auto;
-            }
-
-            .status-item {
-                font-size: 1rem;
-            }
-
-            button {
-                padding: 10px 20px;
-                font-size: 0.9rem;
-                width: 100%;
-            }
-
-            .piece-417db {
-                font-size: 30px !important;
-                line-height: 30px !important;
-                height: 30px !important;
-                width: 30px !important;
-            }
-        }
-
-        /* Prevent scrolling when touching the board on mobile */
-        .board-container {
-            touch-action: none;
         }
     </style>
 </head>
 <body>
     <div class="game-container">
         <h1>Advanced Chess Game</h1>
-        <div class="board-container">
-            <div id="board"></div>
-        </div>
-        <div class="status-container">
-            <div class="status-item">Turn: <span id="turn">White</span></div>
-            <div class="status-item">In Check: <span id="check">No</span></div>
-            <div class="status-item">Game Over: <span id="gameOver">No</span></div>
-            <div class="button-container">
-                <button id="resetBtn">Reset Game</button>
-                <button id="undoBtn">Undo Move</button>
-                <button id="flipBtn">Flip Board</button>
-            </div>
-        </div>
+        <div id="board"></div>
+        <div class="status" id="status"></div>
+        <button id="resetBtn">Reset Game</button>
     </div>
 
     <script>
         const PIECES = {
-            'wK': '♔', 'wQ': '♕', 'wR': '♖', 'wB': '♗', 'wN': '♘', 'wP': '♙',
-            'bK': '♚', 'bQ': '♛', 'bR': '♜', 'bB': '♝', 'bN': '♞', 'bP': '♟'
+            'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚', 'p': '♟',
+            'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔', 'P': '♙'
         };
 
-        var board = null;
-        var game = new Chess();
+        let board;
+        let game = new Chess();
+        let selectedSquare = null;
 
-        function updateStatus() {
-            document.getElementById('turn').textContent = game.turn() === 'w' ? 'White' : 'Black';
-            document.getElementById('check').textContent = game.in_check() ? 'Yes' : 'No';
-            document.getElementById('gameOver').textContent = game.game_over() ? 'Yes' : 'No';
+        function createBoard() {
+            const boardElement = document.getElementById('board');
+            boardElement.innerHTML = '';
+            for (let i = 0; i < 64; i++) {
+                const square = document.createElement('div');
+                square.classList.add('square');
+                square.classList.add((i + Math.floor(i / 8)) % 2 === 0 ? 'white' : 'black');
+                square.dataset.square = String.fromCharCode(97 + (i % 8)) + (8 - Math.floor(i / 8));
+                square.addEventListener('click', onSquareClick);
+                boardElement.appendChild(square);
+            }
+            updateBoard();
         }
 
-        function onDragStart(source, piece) {
-            if (game.game_over()) return false;
-            if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
-                (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
-                return false;
+        function updateBoard() {
+            const squares = document.querySelectorAll('.square');
+            squares.forEach(square => {
+                const piece = game.get(square.dataset.square);
+                square.textContent = piece ? PIECES[piece.type.toUpperCase()] : '';
+                if (piece) {
+                    square.style.color = piece.color === 'w' ? 'white' : 'black';
+                }
+            });
+            updateStatus();
+        }
+
+        function onSquareClick(event) {
+            const square = event.target.dataset.square;
+            if (selectedSquare === null) {
+                selectedSquare = square;
+                highlightSquare(square);
+                highlightMoves(square);
+            } else {
+                const move = game.move({
+                    from: selectedSquare,
+                    to: square,
+                    promotion: 'q'
+                });
+
+                if (move === null) {
+                    selectedSquare = square;
+                    removeHighlights();
+                    highlightSquare(square);
+                    highlightMoves(square);
+                } else {
+                    selectedSquare = null;
+                    removeHighlights();
+                    updateBoard();
+                }
             }
         }
 
-        function onDrop(source, target) {
-            var move = game.move({
-                from: source,
-                to: target,
-                promotion: 'q'
+        function highlightSquare(square) {
+            document.querySelector(`[data-square="${square}"]`).classList.add('highlight');
+        }
+
+        function highlightMoves(square) {
+            const moves = game.moves({ square: square, verbose: true });
+            moves.forEach(move => {
+                document.querySelector(`[data-square="${move.to}"]`).classList.add('highlight');
             });
-
-            if (move === null) return 'snapback';
-            updateStatus();
         }
 
-        function onSnapEnd() {
-            board.position(game.fen());
+        function removeHighlights() {
+            document.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight'));
         }
 
-        // Custom piece theme using Unicode characters
-        function customPieceTheme(piece) {
-            return PIECES[piece];
+        function updateStatus() {
+            let status = '';
+            if (game.in_checkmate()) {
+                status = `Checkmate! ${game.turn() === 'w' ? 'Black' : 'White'} wins.`;
+            } else if (game.in_draw()) {
+                status = 'Draw!';
+            } else {
+                status = `${game.turn() === 'w' ? 'White' : 'Black'} to move`;
+                if (game.in_check()) {
+                    status += ', Check!';
+                }
+            }
+            document.getElementById('status').textContent = status;
         }
 
-        var config = {
-            draggable: true,
-            position: 'start',
-            onDragStart: onDragStart,
-            onDrop: onDrop,
-            onSnapEnd: onSnapEnd,
-            pieceTheme: customPieceTheme,
-            showNotation: true
-        };
-
-        board = Chessboard('board', config);
-
-        // Prevent scrolling when touching the board on mobile
-        document.querySelector('.board-container').addEventListener('touchmove', function(e) {
-            e.preventDefault();
-        }, { passive: false });
-
-        // Handle window resize
-        window.addEventListener('resize', function() {
-            board.resize();
-        });
-
-        // Button event listeners
-        document.getElementById('resetBtn').addEventListener('click', function() {
+        document.getElementById('resetBtn').addEventListener('click', () => {
             game.reset();
-            board.position('start');
-            updateStatus();
+            selectedSquare = null;
+            removeHighlights();
+            updateBoard();
         });
 
-        document.getElementById('undoBtn').addEventListener('click', function() {
-            game.undo();
-            board.position(game.fen());
-            updateStatus();
-        });
-
-        document.getElementById('flipBtn').addEventListener('click', function() {
-            board.flip();
-        });
-
-        updateStatus();
+        createBoard();
     </script>
 </body>
 </html>
+
 
