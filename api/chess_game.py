@@ -65,13 +65,17 @@ def computer_move():
     if not legal_moves:
         return jsonify({'error': 'No legal moves'}), 400
     
+    # Debug: Log the legal moves
+    print("Legal moves:", [move.uci() for move in legal_moves])
+
     # Simple AI: choose a random legal move
     move = random.choice(legal_moves)
     board.push(move)  # Update the board with the chosen move
     
+    # Return the updated state
     return jsonify({
-        'move': move.uci(),
-        'fen': board.fen(),
+        'move': move.uci(),  # Computer's chosen move
+        'fen': board.fen(),  # Updated FEN after the move
         'game_over': board.is_game_over(),
         'in_check': board.is_check(),
         'turn': 'white' if board.turn == chess.WHITE else 'black'
@@ -79,5 +83,4 @@ def computer_move():
 
 if __name__ == '__main__':
     app.run(debug=True)
-
 
