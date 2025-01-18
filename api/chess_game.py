@@ -60,7 +60,6 @@ def computer_move():
     
     # Simple AI: choose a random legal move
     move = random.choice(legal_moves)
-    board.push(move)
     
     return jsonify({
         'move': move.uci(),
