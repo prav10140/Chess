@@ -18,7 +18,11 @@ def make_move():
     if not fen or not move:
         return jsonify({'error': 'Missing FEN or move'}), 400
 
-    board = chess.Board(fen)
+    try:
+        board = chess.Board(fen)
+    except ValueError:
+        return jsonify({'error': 'Invalid FEN'}), 400
+
     try:
         move_obj = chess.Move.from_uci(move)
         if move_obj in board.legal_moves:
@@ -49,17 +53,21 @@ def computer_move():
     if not fen:
         return jsonify({'error': 'Missing FEN'}), 400
 
-    board = chess.Board(fen)
+    try:
+        board = chess.Board(fen)
+    except ValueError:
+        return jsonify({'error': 'Invalid FEN'}), 400
     
     if board.is_game_over():
-        return jsonify({'error': 'Game is over'})
+        return jsonify({'error': 'Game is over'}), 400
     
     legal_moves = list(board.legal_moves)
     if not legal_moves:
-        return jsonify({'error': 'No legal moves'})
+        return jsonify({'error': 'No legal moves'}), 400
     
     # Simple AI: choose a random legal move
     move = random.choice(legal_moves)
+    board.push(move)  # Update the board with the chosen move
     
     return jsonify({
         'move': move.uci(),
@@ -71,6 +79,5 @@ def computer_move():
 
 if __name__ == '__main__':
     app.run(debug=True)
-
 
 
