@@ -11,8 +11,13 @@ def serve_index():
 
 @app.route('/api/move', methods=['POST'])
 def make_move():
-    fen = request.json['fen']
-    move = request.json['move']
+    data = request.json
+    fen = data.get('fen')
+    move = data.get('move')
+    
+    if not fen or not move:
+        return jsonify({'error': 'Missing FEN or move'}), 400
+
     board = chess.Board(fen)
     try:
         move_obj = chess.Move.from_uci(move)
@@ -38,7 +43,12 @@ def reset_game():
 
 @app.route('/api/computer_move', methods=['POST'])
 def computer_move():
-    fen = request.json['fen']
+    data = request.json
+    fen = data.get('fen')
+    
+    if not fen:
+        return jsonify({'error': 'Missing FEN'}), 400
+
     board = chess.Board(fen)
     
     if board.is_game_over():
@@ -62,5 +72,6 @@ def computer_move():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
 
 
