@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, send_from_directory
 import chess
+import random
 import os
 
 app = Flask(__name__)
@@ -37,8 +38,28 @@ def reset_game():
         'fen': board.fen()
     })
 
+@app.route('/api/computer_move', methods=['POST'])
+def computer_move():
+    fen = request.json['fen']
+    board = chess.Board(fen)
+    
+    if board.is_game_over():
+        return jsonify({'error': 'Game is over'})
+    
+    legal_moves = list(board.legal_moves)
+    if not legal_moves:
+        return jsonify({'error': 'No legal moves'})
+    
+    # Simple AI: choose a random legal move
+    move = random.choice(legal_moves)
+    
+    return jsonify({
+        'move': move.uci()
+    })
+
 if __name__ == '__main__':
     app.run(debug=True)
+
 
 
 
