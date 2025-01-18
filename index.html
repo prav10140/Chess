@@ -258,10 +258,14 @@
 
         function updateStatus() {
             let status = '';
-            if (game.in_checkmate()) {
-                status = `Checkmate! ${game.turn() === 'w' ? 'Black' : 'White'} wins.`;
-            } else if (game.in_draw()) {
-                status = 'Draw!';
+            if (game.game_over()) {
+                if (game.in_checkmate()) {
+                    status = `Checkmate! ${game.turn() === 'w' ? 'Black' : 'White'} wins.`;
+                } else if (game.in_draw()) {
+                    status = 'Draw!';
+                } else {
+                    status = 'Game over!';
+                }
             } else {
                 status = `${game.turn() === 'w' ? 'White' : 'Black'} to move`;
                 if (game.in_check()) {
@@ -285,7 +289,7 @@
             const animatedPiece = document.createElement('div');
             animatedPiece.textContent = piece;
             animatedPiece.style.position = 'absolute';
-            animatedPiece.style.fontSize = fromSquare.style.fontSize;
+            animatedPiece.style.fontSize = getComputedStyle(fromSquare).fontSize;
             animatedPiece.style.color = color;
             animatedPiece.style.textShadow = shadow;
             animatedPiece.style.zIndex = '1000';
@@ -371,4 +375,5 @@
     </script>
 </body>
 </html>
+
 
