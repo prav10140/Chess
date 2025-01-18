@@ -5,17 +5,15 @@ import os
 
 app = Flask(__name__)
 
-# Global variable to store the game state
-board = chess.Board()
-
 @app.route('/')
 def serve_index():
     return send_from_directory('.', 'index.html')
 
 @app.route('/api/move', methods=['POST'])
 def make_move():
-    global board
+    fen = request.json['fen']
     move = request.json['move']
+    board = chess.Board(fen)
     try:
         move_obj = chess.Move.from_uci(move)
         if move_obj in board.legal_moves:
@@ -33,7 +31,6 @@ def make_move():
 
 @app.route('/api/reset', methods=['POST'])
 def reset_game():
-    global board
     board = chess.Board()
     return jsonify({
         'fen': board.fen()
@@ -41,9 +38,8 @@ def reset_game():
 
 @app.route('/api/computer_move', methods=['POST'])
 def computer_move():
-    global board
     fen = request.json['fen']
-    board.set_fen(fen)
+    board = chess.Board(fen)
     
     if board.is_game_over():
         return jsonify({'error': 'Game is over'})
