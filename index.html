@@ -339,6 +339,9 @@
                         }
                     }
                 }
+            })
+            .catch(error => {
+                console.error('Error:', error);
             });
         }
 
@@ -355,6 +358,9 @@
             selectedSquare = null;
             removeHighlights();
             updateBoard();
+            if (playingComputer && game.turn() === 'b') {
+                setTimeout(makeComputerMove, 500);
+            }
         });
 
         createBoard();
