@@ -163,220 +163,219 @@
         <button id="resetBtn">Reset Game</button>
     </div>
 
-    <script>
-        const PIECES = {
-            'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚', 'p': '♟',
-            'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔', 'P': '♙'
-        };
+  <script>
+    const PIECES = {
+        'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚', 'p': '♟',
+        'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔', 'P': '♙'
+    };
 
-        let board;
-        let game = new Chess();
-        let selectedSquare = null;
-        let playingComputer = false;
+    let board;
+    let game = new Chess();
+    let selectedSquare = null;
+    let playingComputer = false;
 
-        function createBoard() {
-            const boardElement = document.getElementById('board');
-            boardElement.innerHTML = '';
-            for (let i = 0; i < 64; i++) {
-                const square = document.createElement('div');
-                square.classList.add('square');
-                square.classList.add((i + Math.floor(i / 8)) % 2 === 0 ? 'white' : 'black');
-                const col = String.fromCharCode(97 + (i % 8));
-                const row = 8 - Math.floor(i / 8);
-                square.dataset.square = col + row;
-                square.dataset.position = col + row;
-                square.addEventListener('click', onSquareClick);
-                boardElement.appendChild(square);
+    function createBoard() {
+        const boardElement = document.getElementById('board');
+        boardElement.innerHTML = '';
+        for (let i = 0; i < 64; i++) {
+            const square = document.createElement('div');
+            square.classList.add('square');
+            square.classList.add((i + Math.floor(i / 8)) % 2 === 0 ? 'white' : 'black');
+            const col = String.fromCharCode(97 + (i % 8));
+            const row = 8 - Math.floor(i / 8);
+            square.dataset.square = col + row;
+            square.dataset.position = col + row;
+            square.addEventListener('click', onSquareClick);
+            boardElement.appendChild(square);
+        }
+        updateBoard();
+    }
+
+    function updateBoard() {
+        const squares = document.querySelectorAll('.square');
+        squares.forEach(square => {
+            const piece = game.get(square.dataset.square);
+            square.textContent = piece ? PIECES[piece.type.toUpperCase()] : '';
+            if (piece) {
+                square.style.color = piece.color === 'w' ? 'white' : 'black';
+                square.style.textShadow = piece.color === 'w' ? '2px 2px 2px rgba(0,0,0,0.4)' : '2px 2px 2px rgba(255,255,255,0.4)';
+            } else {
+                square.style.color = '';
+                square.style.textShadow = '';
             }
-            updateBoard();
-        }
+        });
+        updateStatus();
+    }
 
-        function updateBoard() {
-            const squares = document.querySelectorAll('.square');
-            squares.forEach(square => {
-                const piece = game.get(square.dataset.square);
-                square.textContent = piece ? PIECES[piece.type.toUpperCase()] : '';
-                if (piece) {
-                    square.style.color = piece.color === 'w' ? 'white' : 'black';
-                    square.style.textShadow = piece.color === 'w' ? '2px 2px 2px rgba(0,0,0,0.4)' : '2px 2px 2px rgba(255,255,255,0.4)';
-                } else {
-                    square.style.color = '';
-                    square.style.textShadow = '';
-                }
+    function onSquareClick(event) {
+        if (playingComputer && game.turn() === 'b') return; // Prevent moves when it's computer's turn
+
+        const square = event.target.dataset.square;
+        if (selectedSquare === null) {
+            selectedSquare = square;
+            highlightSquare(square);
+            highlightMoves(square);
+        } else {
+            const move = game.move({
+                from: selectedSquare,
+                to: square,
+                promotion: 'q'
             });
-            updateStatus();
-        }
 
-        function onSquareClick(event) {
-            if (playingComputer && game.turn() === 'b') return; // Prevent moves when it's computer's turn
-
-            const square = event.target.dataset.square;
-            if (selectedSquare === null) {
+            if (move === null) {
                 selectedSquare = square;
+                removeHighlights();
                 highlightSquare(square);
                 highlightMoves(square);
             } else {
-                const move = game.move({
-                    from: selectedSquare,
-                    to: square,
-                    promotion: 'q'
-                });
+                animateMove(selectedSquare, square);
+                selectedSquare = null;
+                removeHighlights();
+                updateBoard();
+                if (game.game_over()) {
+                    animateWin();
+                } else if (playingComputer && game.turn() === 'b') {
+                    setTimeout(makeComputerMove, 500);
+                }
+            }
+        }
+    }
 
-                if (move === null) {
-                    selectedSquare = square;
-                    removeHighlights();
-                    highlightSquare(square);
-                    highlightMoves(square);
-                } else {
-                    animateMove(selectedSquare, square);
-                    selectedSquare = null;
-                    removeHighlights();
+    function highlightSquare(square) {
+        document.querySelector(`[data-square="${square}"]`).classList.add('highlight');
+    }
+
+    function highlightMoves(square) {
+        const moves = game.moves({ square: square, verbose: true });
+        moves.forEach(move => {
+            document.querySelector(`[data-square="${move.to}"]`).classList.add('highlight');
+        });
+    }
+
+    function removeHighlights() {
+        document.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight'));
+    }
+
+    function updateStatus() {
+        let status = '';
+        if (game.game_over()) {
+            if (game.in_checkmate()) {
+                status = `Checkmate! ${game.turn() === 'w' ? 'Black' : 'White'} wins.`;
+            } else if (game.in_draw()) {
+                status = 'Draw!';
+            } else {
+                status = 'Game over!';
+            }
+        } else {
+            status = `${game.turn() === 'w' ? 'White' : 'Black'} to move`;
+            if (game.in_check()) {
+                status += ', Check!';
+            }
+        }
+        document.getElementById('status').textContent = status;
+    }
+
+    function makeComputerMove() {
+        fetch('/api/computer_move', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ fen: game.fen() }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.move) {
+                const move = game.move(data.move);
+                if (move) {
+                    animateMove(move.from, move.to);
                     updateBoard();
                     if (game.game_over()) {
                         animateWin();
-                    } else if (playingComputer && game.turn() === 'b') {
-                        setTimeout(makeComputerMove, 500);
                     }
-                }
-            }
-        }
-
-        function highlightSquare(square) {
-            document.querySelector(`[data-square="${square}"]`).classList.add('highlight');
-        }
-
-        function highlightMoves(square) {
-            const moves = game.moves({ square: square, verbose: true });
-            moves.forEach(move => {
-                document.querySelector(`[data-square="${move.to}"]`).classList.add('highlight');
-            });
-        }
-
-        function removeHighlights() {
-            document.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight'));
-        }
-
-        function updateStatus() {
-            let status = '';
-            if (game.game_over()) {
-                if (game.in_checkmate()) {
-                    status = `Checkmate! ${game.turn() === 'w' ? 'Black' : 'White'} wins.`;
-                } else if (game.in_draw()) {
-                    status = 'Draw!';
                 } else {
-                    status = 'Game over!';
+                    console.error('Invalid move returned by server:', data.move);
                 }
-            } else {
-                status = `${game.turn() === 'w' ? 'White' : 'Black'} to move`;
-                if (game.in_check()) {
-                    status += ', Check!';
-                }
+            } else if (data.error) {
+                console.error('Computer move error:', data.error);
             }
-            document.getElementById('status').textContent = status;
-        }
+        })
+        .catch(error => {
+            console.error('Error making computer move:', error);
+        });
+    }
 
-        function animateMove(from, to) {
-            const fromSquare = document.querySelector(`[data-square="${from}"]`);
-            const toSquare = document.querySelector(`[data-square="${to}"]`);
-            const piece = fromSquare.textContent;
-            const color = fromSquare.style.color;
-            const shadow = fromSquare.style.textShadow;
+    function animateMove(from, to) {
+        const fromSquare = document.querySelector(`[data-square="${from}"]`);
+        const toSquare = document.querySelector(`[data-square="${to}"]`);
+        const piece = fromSquare.textContent;
+        const color = fromSquare.style.color;
+        const shadow = fromSquare.style.textShadow;
 
-            fromSquare.textContent = '';
-            fromSquare.style.color = '';
-            fromSquare.style.textShadow = '';
+        fromSquare.textContent = '';
+        fromSquare.style.color = '';
+        fromSquare.style.textShadow = '';
 
-            const animatedPiece = document.createElement('div');
-            animatedPiece.textContent = piece;
-            animatedPiece.style.position = 'absolute';
-            animatedPiece.style.fontSize = getComputedStyle(fromSquare).fontSize;
-            animatedPiece.style.color = color;
-            animatedPiece.style.textShadow = shadow;
-            animatedPiece.style.zIndex = '1000';
+        const animatedPiece = document.createElement('div');
+        animatedPiece.textContent = piece;
+        animatedPiece.style.position = 'absolute';
+        animatedPiece.style.fontSize = getComputedStyle(fromSquare).fontSize;
+        animatedPiece.style.color = color;
+        animatedPiece.style.textShadow = shadow;
+        animatedPiece.style.zIndex = '1000';
 
-            const startRect = fromSquare.getBoundingClientRect();
-            const endRect = toSquare.getBoundingClientRect();
+        const startRect = fromSquare.getBoundingClientRect();
+        const endRect = toSquare.getBoundingClientRect();
 
-            animatedPiece.style.left = `${startRect.left}px`;
-            animatedPiece.style.top = `${startRect.top}px`;
+        animatedPiece.style.left = `${startRect.left}px`;
+        animatedPiece.style.top = `${startRect.top}px`;
 
-            document.body.appendChild(animatedPiece);
+        document.body.appendChild(animatedPiece);
 
-            requestAnimationFrame(() => {
-                animatedPiece.style.transition = 'all 0.3s ease';
-                animatedPiece.style.left = `${endRect.left}px`;
-                animatedPiece.style.top = `${endRect.top}px`;
-            });
-
-            setTimeout(() => {
-                document.body.removeChild(animatedPiece);
-                updateBoard();
-            }, 300);
-        }
-
-        function animateWin() {
-            const board = document.getElementById('board');
-            board.classList.add('win-animation');
-            setTimeout(() => {
-                board.classList.remove('win-animation');
-            }, 1500);
-        }
-
-        function makeComputerMove() {
-            fetch('/api/computer_move', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ fen: game.fen() }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Computer move response:', data);
-                if (data.move) {
-                    const move = game.move(data.move);
-                    if (move) {
-                        console.log('Computer move applied:', move);
-                        animateMove(move.from, move.to);
-                        updateBoard();
-                        if (game.game_over()) {
-                            animateWin();
-                        }
-                    } else {
-                        console.error('Invalid move returned by server:', data.move);
-                    }
-                } else if (data.error) {
-                    console.error('Computer move error:', data.error);
-                }
-            })
-            .catch(error => {
-                console.error('Error making computer move:', error);
-            });
-        }
-
-        document.getElementById('resetBtn').addEventListener('click', () => {
-            game.reset();
-            selectedSquare = null;
-            removeHighlights();
-            updateBoard();
-            if (playingComputer && game.turn() === 'b') {
-                setTimeout(makeComputerMove, 500);
-            }
+        requestAnimationFrame(() => {
+            animatedPiece.style.transition = 'all 0.3s ease';
+            animatedPiece.style.left = `${endRect.left}px`;
+            animatedPiece.style.top = `${endRect.top}px`;
         });
 
-        document.getElementById('playComputer').addEventListener('change', (event) => {
-            playingComputer = event.target.checked;
-            game.reset();
-            selectedSquare = null;
-            removeHighlights();
+        setTimeout(() => {
+            document.body.removeChild(animatedPiece);
             updateBoard();
-            if (playingComputer && game.turn() === 'b') {
-                setTimeout(makeComputerMove, 500);
-            }
-        });
+        }, 300);
+    }
 
-        createBoard();
-    </script>
+    function animateWin() {
+        const board = document.getElementById('board');
+        board.classList.add('win-animation');
+        setTimeout(() => {
+            board.classList.remove('win-animation');
+        }, 1500);
+    }
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+        game.reset();
+        selectedSquare = null;
+        removeHighlights();
+        updateBoard();
+        if (playingComputer && game.turn() === 'b') {
+            setTimeout(makeComputerMove, 500);
+        }
+    });
+
+    document.getElementById('playComputer').addEventListener('change', (event) => {
+        playingComputer = event.target.checked;
+        game.reset();
+        selectedSquare = null;
+        removeHighlights();
+        updateBoard();
+        if (playingComputer && game.turn() === 'b') {
+            setTimeout(makeComputerMove, 500);
+        }
+    });
+
+    createBoard();
+</script>
+
 </body>
 </html>
 
