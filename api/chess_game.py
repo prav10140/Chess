@@ -14,6 +14,7 @@ def serve_index():
 
 @app.route('/api/move', methods=['POST'])
 def make_move():
+    global board
     move = request.json['move']
     try:
         move_obj = chess.Move.from_uci(move)
@@ -40,8 +41,9 @@ def reset_game():
 
 @app.route('/api/computer_move', methods=['POST'])
 def computer_move():
+    global board
     fen = request.json['fen']
-    board = chess.Board(fen)
+    board.set_fen(fen)
     
     if board.is_game_over():
         return jsonify({'error': 'Game is over'})
@@ -52,14 +54,17 @@ def computer_move():
     
     # Simple AI: choose a random legal move
     move = random.choice(legal_moves)
+    board.push(move)
     
     return jsonify({
-        'move': move.uci()
+        'move': move.uci(),
+        'fen': board.fen(),
+        'game_over': board.is_game_over(),
+        'in_check': board.is_check(),
+        'turn': 'white' if board.turn == chess.WHITE else 'black'
     })
 
 if __name__ == '__main__':
     app.run(debug=True)
-
-
 
 
