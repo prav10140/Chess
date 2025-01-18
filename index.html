@@ -340,6 +340,8 @@
                         if (game.game_over()) {
                             animateWin();
                         }
+                    } else {
+                        console.error('Invalid move returned by server:', data.move);
                     }
                 } else if (data.error) {
                     console.error('Computer move error:', data.error);
